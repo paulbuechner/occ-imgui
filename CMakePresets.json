@@ -1,0 +1,53 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 25,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "occ-imgui-ninja-multiconfiguration-vcpkg",
+      "displayName": "occ-imgui Ninja Multi-Config",
+      "description": "Configure with vcpkg toolchain and generate Ninja project files for all configurations",
+      "binaryDir": "${sourceDir}/builds/${presetName}",
+      "generator": "Ninja Multi-Config",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": {
+          "type": "FILEPATH",
+          "value": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+        },
+        "OCC_IMGUI_BUILD_TESTS": "ON",
+        "OCC_IMGUI_BUILD_WARNINGS": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "occ-imgui-ninja-multiconfiguration-vcpkg",
+      "displayName": "Build occ-imgui-ninja-multiconfiguration-vcpkg",
+      "configurePreset": "occ-imgui-ninja-multiconfiguration-vcpkg"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "occ-imgui-ninja-multiconfiguration-vcpkg",
+      "configurePreset": "occ-imgui-ninja-multiconfiguration-vcpkg"
+    }
+  ],
+  "packagePresets": [
+    {
+      "name": "occ-imgui-ninja-multiconfiguration-vcpkg-windows",
+      "configurePreset": "occ-imgui-ninja-multiconfiguration-vcpkg",
+      "generators": [
+        "ZIP",
+        "NSIS"
+      ],
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    }
+  ]
+}
