@@ -116,6 +116,7 @@ void GlfwOcctView::initWindow(const int theWidth, const int theHeight, const cha
     glfwInit();
 
     const bool toAskCoreProfile = true;
+    //
     if (toAskCoreProfile)
     {
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -124,8 +125,8 @@ void GlfwOcctView::initWindow(const int theWidth, const int theHeight, const cha
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-        //glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, true);
-        //glfwWindowHint(GLFW_DECORATED, GL_FALSE);
+        // glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, true);
+        // glfwWindowHint(GLFW_DECORATED, GL_FALSE);
     }
 
     myOcctWindow = new GlfwOcctWindow(theWidth, theHeight, theTitle);
@@ -205,22 +206,25 @@ void GlfwOcctView::renderGui()
     ImGui::NewFrame();
 
     // Create main dockspace
-    ImGuiID dockspace_id = ImGui::GetID("MainDockSpace");
-    ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
+    const ImGuiID dockspaceId = ImGui::GetID("MainDockSpace");
+    ImGui::DockSpace(dockspaceId, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
 
     // 3D View Window - set to dock into the main area by default
-    ImGui::SetNextWindowDockID(dockspace_id, ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowDockID(dockspaceId, ImGuiCond_FirstUseEver);
     if (ImGui::Begin("3D View", nullptr, ImGuiWindowFlags_NoScrollbar))
     {
         // Get the available content region
-        ImVec2 viewportSize = ImGui::GetContentRegionAvail();
+        const ImVec2 viewportSize = ImGui::GetContentRegionAvail();
 
         // Store viewport dimensions for resize tracking
-        bool viewportResized = (myViewportWidth != (int)viewportSize.x || myViewportHeight != (int)viewportSize.y);
+        const bool viewportResized =
+            myViewportWidth != static_cast<int>(viewportSize.x) ||
+            myViewportHeight != static_cast<int>(viewportSize.y);
+
         if (viewportResized && viewportSize.x > 0 && viewportSize.y > 0)
         {
-            myViewportWidth = (int)viewportSize.x;
-            myViewportHeight = (int)viewportSize.y;
+            myViewportWidth = static_cast<int>(viewportSize.x);
+            myViewportHeight = static_cast<int>(viewportSize.y);
             if (!myView.IsNull())
             {
                 // Trigger viewport resize in OCCT
@@ -241,7 +245,7 @@ void GlfwOcctView::renderGui()
     ImGui::End();
 
     // Settings/Demo Window (dockable)
-    ImGui::SetNextWindowDockID(dockspace_id, ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowDockID(dockspaceId, ImGuiCond_FirstUseEver);
     if (ImGui::Begin("Settings"))
     {
         if (ImGui::CollapsingHeader("Rendering Stats", ImGuiTreeNodeFlags_DefaultOpen))
@@ -266,7 +270,7 @@ void GlfwOcctView::renderGui()
     ImGui::End();
 
     // Control Panel (dockable)
-    ImGui::SetNextWindowDockID(dockspace_id, ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowDockID(dockspaceId, ImGuiCond_FirstUseEver);
     if (ImGui::Begin("Controls"))
     {
         ImGui::Text("OpenCASCADE Viewer");
@@ -302,8 +306,7 @@ void GlfwOcctView::renderGui()
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
     // Handle multi-viewport rendering
-    ImGuiIO& io = ImGui::GetIO();
-    if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+    if (const ImGuiIO& io = ImGui::GetIO(); io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
     {
         GLFWwindow* backup_current_context = glfwGetCurrentContext();
         ImGui::UpdatePlatformWindows();
@@ -466,7 +469,7 @@ void GlfwOcctView::onMouseButton(const int theButton, const int theAction, const
 // Function : onMouseMove
 // Purpose  :
 // ================================================================
-void GlfwOcctView::onMouseMove(int thePosX, int thePosY)
+void GlfwOcctView::onMouseMove(const int thePosX, const int thePosY)
 {
     if (myView.IsNull())
     {
@@ -475,7 +478,7 @@ void GlfwOcctView::onMouseMove(int thePosX, int thePosY)
 
     if (const ImGuiIO& aIO = ImGui::GetIO(); aIO.WantCaptureMouse)
     {
-        //myView->Redraw();
+        // myView->Redraw();
     }
     else
     {
