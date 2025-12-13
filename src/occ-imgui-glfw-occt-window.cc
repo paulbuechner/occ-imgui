@@ -139,5 +139,5 @@ Graphic3d_Vec2i GlfwOcctWindow::CursorPosition() const
 {
   Graphic3d_Vec2d aPos;
   glfwGetCursorPos(myGlfwWindow, &aPos.x(), &aPos.y());
-  return Graphic3d_Vec2i((int)aPos.x(), (int)aPos.y());
+  return Graphic3d_Vec2i(static_cast<int>(aPos.x()), static_cast<int>(aPos.y()));
 }

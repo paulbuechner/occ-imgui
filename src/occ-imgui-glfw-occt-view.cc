@@ -144,6 +144,7 @@ void GlfwOcctView::initWindow(const int theWidth, const int theHeight, const cha
   glfwSetScrollCallback(myOcctWindow->getGlfwWindow(), onMouseScrollCallback);
   glfwSetMouseButtonCallback(myOcctWindow->getGlfwWindow(), onMouseButtonCallback);
   glfwSetCursorPosCallback(myOcctWindow->getGlfwWindow(), onMouseMoveCallback);
+  glfwSetWindowContentScaleCallback(myOcctWindow->getGlfwWindow(), onContentScaleCallback);
 }
 
 // ================================================================
@@ -202,6 +203,33 @@ void GlfwOcctView::initGui() const
 
   // Setup Dear ImGui style.
   ImGui::StyleColorsClassic();
+
+  float xScale = 1.0f;
+  float yScale = 1.0f;
+  glfwGetWindowContentScale(myOcctWindow->getGlfwWindow(), &xScale, &yScale);
+  updateUiScale(std::max(std::max(xScale, yScale), 1.0f));
+}
+
+void GlfwOcctView::updateUiScale(const float theScale) const
+{
+  if (myUiScaleApplied && std::fabs(myUiScale - theScale) < 0.01f)
+  {
+    return;
+  }
+
+  ImGuiStyle& style = ImGui::GetStyle();
+  const float ratio = theScale / myUiScale;
+  style.ScaleAllSizes(ratio);
+
+  ImGuiIO& io = ImGui::GetIO();
+  ImGui_ImplOpenGL3_DestroyFontsTexture();
+  io.Fonts->Clear();
+  io.Fonts->AddFontDefault();
+  io.Fonts->Build();
+  ImGui_ImplOpenGL3_CreateFontsTexture();
+
+  myUiScale        = theScale;
+  myUiScaleApplied = true;
 }
 
 void GlfwOcctView::renderGui()
@@ -210,9 +238,37 @@ void GlfwOcctView::renderGui()
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
 
-  // Create main dockspace
-  const ImGuiID dockspaceId = ImGui::GetID("MainDockSpace");
-  ImGui::DockSpace(dockspaceId, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
+  const ImGuiViewport* mainViewport = ImGui::GetMainViewport();
+  ImGui::SetNextWindowPos(mainViewport->Pos);
+  ImGui::SetNextWindowSize(mainViewport->Size);
+  ImGui::SetNextWindowViewport(mainViewport->ID);
+
+  ImGuiWindowFlags dockspaceHostFlags =
+    ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse
+    | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus
+    | ImGuiWindowFlags_NoNavFocus | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_MenuBar;
+
+  ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+  ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+  ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+
+  const ImGuiID                dockspaceId    = ImGui::GetID("MainDockSpace");
+  constexpr ImGuiDockNodeFlags dockspaceFlags = ImGuiDockNodeFlags_PassthruCentralNode;
+
+  ImGui::Begin("DockSpaceHost", nullptr, dockspaceHostFlags);
+  ImGui::PopStyleVar(3);
+  ImGui::DockSpace(dockspaceId, ImVec2(0.0f, 0.0f), dockspaceFlags);
+
+  if (ImGui::BeginMenuBar())
+  {
+    if (ImGui::BeginMenu("Window"))
+    {
+      ImGui::MenuItem("Settings", nullptr, &myShowSettings);
+      ImGui::EndMenu();
+    }
+    ImGui::EndMenuBar();
+  }
+  ImGui::End();
 
   // 3D View Window - set to dock into the main area by default
   ImGui::SetNextWindowDockID(dockspaceId, ImGuiCond_FirstUseEver);
@@ -253,28 +309,31 @@ void GlfwOcctView::renderGui()
 
   // Settings/Demo Window (dockable)
   ImGui::SetNextWindowDockID(dockspaceId, ImGuiCond_FirstUseEver);
-  if (ImGui::Begin("Settings"))
+  if (myShowSettings)
   {
-    if (ImGui::CollapsingHeader("Rendering Stats", ImGuiTreeNodeFlags_DefaultOpen))
+    if (ImGui::Begin("Settings", &myShowSettings))
     {
-      if (!myView.IsNull())
+      if (ImGui::CollapsingHeader("Rendering Stats", ImGuiTreeNodeFlags_DefaultOpen))
       {
-        const Graphic3d_RenderingParams& aParams = myView->ChangeRenderingParams();
-        ImGui::Text("Stats Enabled: %s", aParams.ToShowStats ? "Yes" : "No");
+        if (!myView.IsNull())
+        {
+          const Graphic3d_RenderingParams& aParams = myView->ChangeRenderingParams();
+          ImGui::Text("Stats Enabled: %s", aParams.ToShowStats ? "Yes" : "No");
+        }
       }
-    }
 
-    ImGui::Separator();
-    if (ImGui::CollapsingHeader("ImGui Demo", ImGuiTreeNodeFlags_DefaultOpen))
-    {
-      static bool show_demo = true;
-      if (show_demo)
+      ImGui::Separator();
+      if (ImGui::CollapsingHeader("ImGui Demo", ImGuiTreeNodeFlags_DefaultOpen))
       {
-        ImGui::ShowDemoWindow(&show_demo);
+        static bool show_demo = true;
+        if (show_demo)
+        {
+          ImGui::ShowDemoWindow(&show_demo);
+        }
       }
     }
+    ImGui::End();
   }
-  ImGui::End();
 
   // Control Panel (dockable)
   ImGui::SetNextWindowDockID(dockspaceId, ImGuiCond_FirstUseEver);
@@ -496,4 +555,13 @@ void GlfwOcctView::onMouseMove(const int thePosX, const int thePosY)
     const Graphic3d_Vec2i aNewPos(thePosX, thePosY);
     UpdateMousePosition(aNewPos, PressedMouseButtons(), LastMouseFlags(), false);
   }
+}
+
+// ================================================================
+// Function : onContentScale
+// Purpose  :
+// ================================================================
+void GlfwOcctView::onContentScale(const float theXScale, const float theYScale)
+{
+  updateUiScale(std::max(std::max(theXScale, theYScale), 1.0f));
 }

@@ -59,6 +59,11 @@ private:
   //! Mouse move event.
   void onMouseMove(int thePosX, int thePosY);
 
+  //! Content scale change event.
+  void onContentScale(float theXScale, float theYScale);
+
+  void updateUiScale(float theScale) const;
+
   //! @name GLWF callbacks (static functions)
 private:
   //! GLFW callback redirecting messages into Message::DefaultMessenger().
@@ -102,6 +107,14 @@ private:
     toView(theWin)->onMouseMove(static_cast<int>(thePosX), static_cast<int>(thePosY));
   }
 
+  //! Content scale callback.
+  static void onContentScaleCallback(GLFWwindow* theWin,
+                                     const float theXScale,
+                                     const float theYScale)
+  {
+    toView(theWin)->onContentScale(theXScale, theYScale);
+  }
+
 private:
   Handle(GlfwOcctWindow)         myOcctWindow;
   Handle(V3d_View)               myView;
@@ -109,6 +122,9 @@ private:
   bool                           myToWaitEvents = true;
 
   // ImGui viewport dimensions
-  int myViewportWidth  = 0;
-  int myViewportHeight = 0;
+  int           myViewportWidth  = 0;
+  int           myViewportHeight = 0;
+  bool          myShowSettings   = true;
+  mutable float myUiScale        = 1.0f;
+  mutable bool  myUiScaleApplied = false;
 };
