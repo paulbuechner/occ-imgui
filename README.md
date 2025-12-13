@@ -13,11 +13,9 @@ https://dev.opencascade.org/
 
 https://github.com/Open-Cascade-SAS/OCCT
 
-Open CASCADE Technology (OCCT) a software
-development platform providing services for 3D surface and solid modeling, CAD
-data exchange, and visualization. Most of OCCT functionality is available in
-the form of C++ libraries. OCCT can be best applied in development of software
-dealing with 3D modeling (CAD), manufacturing / measuring (CAM) or numerical
+Open CASCADE Technology (OCCT) a software development platform providing services for 3D surface and solid modeling, CAD
+data exchange, and visualization. Most of OCCT functionality is available in the form of C++ libraries. OCCT can be best
+applied in development of software dealing with 3D modeling (CAD), manufacturing / measuring (CAM) or numerical
 simulation (CAE).
 
 ## IMGUI
@@ -63,3 +61,7 @@ cmake --preset occ-imgui-ninja-multiconfiguration-vcpkg
 # Build the project
 cmake --build --preset occ-imgui-ninja-multiconfiguration-vcpkg
 ```
+
+> If compiling `opencascade` fails, it is likely due to an issue where the path length exceeds Windows' maximum path
+> length limit. In this case set the `VCPKG_ROOT` environment variable to your local vcpkg installation
+> (e.g., `C:/dev/vcpkg`)
